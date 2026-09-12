@@ -1,0 +1,22 @@
+schema_version = "1.0.0"
+
+id = "qc_smart_cylinder"
+version = "1.6.0"
+name = "QC Smart Cylinder"
+tagline = "Cylinders with the segment count their diameter calls for"
+maintainer = "Mutaform Studio"
+type = "add-on"
+
+website = "https://mutaform.studio/"
+
+tags = ["Add Mesh", "Modeling"]
+
+blender_version_min = "4.2.0"
+
+license = [
+    "SPDX:GPL-2.0-or-later",
+]
+
+copyright = [
+    "2026 Mutaform Studio",
+]

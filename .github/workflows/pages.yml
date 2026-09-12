@@ -1,0 +1,70 @@
+name: Publish Blender Extension Repository
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "qc_smart_cylinder/**"
+      - "tools/**"
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build extension ZIP
+        shell: pwsh
+        run: tools/build_release.ps1
+
+      - name: Download Blender
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://download.blender.org/release/Blender4.5/blender-4.5.0-windows-x64.zip" -OutFile blender.zip
+          Expand-Archive -LiteralPath blender.zip -DestinationPath blender -Force
+
+      - name: Prepare Blender Extension Repository
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path pages | Out-Null
+          $zip = Get-ChildItem -Path dist -Filter "qc_smart_cylinder-*.zip" | Select-Object -First 1
+          Copy-Item -LiteralPath $zip.FullName -Destination (Join-Path pages $zip.Name) -Force
+
+          $blender = Get-ChildItem -Path blender -Recurse -Filter blender.exe | Select-Object -First 1
+          & $blender.FullName --command extension server-generate --repo-dir pages
+
+          @"
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>QC Smart Cylinder</title>
+            </head>
+            <body>
+              <h1>QC Smart Cylinder by Mutaform Studio</h1>
+              <p><a href="index.json">Blender Extension Repository Index</a></p>
+              <p><a href="$($zip.Name)">Download Blender Extension ZIP</a></p>
+            </body>
+          </html>
+          "@ | Set-Content -Path pages/index.html -Encoding UTF8
+
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages
+          publish_branch: gh-pages
+          force_orphan: true
