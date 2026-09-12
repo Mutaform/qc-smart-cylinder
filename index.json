@@ -1,0 +1,30 @@
+{
+  "version": "v1",
+  "blocklist": [],
+  "data": [
+    {
+      "schema_version": "1.0.0",
+      "id": "qc_smart_cylinder",
+      "name": "QC Smart Cylinder",
+      "tagline": "Cylinders with the segment count their diameter calls for",
+      "version": "1.6.2",
+      "type": "add-on",
+      "maintainer": "Mutaform Studio",
+      "license": [
+        "SPDX:GPL-2.0-or-later"
+      ],
+      "blender_version_min": "4.2.0",
+      "website": "https://mutaform.studio/",
+      "copyright": [
+        "2026 Mutaform Studio"
+      ],
+      "tags": [
+        "Add Mesh",
+        "Modeling"
+      ],
+      "archive_url": "./qc_smart_cylinder-1.6.2.zip",
+      "archive_size": 56050,
+      "archive_hash": "sha256:43a154fe9fb2d61c56a0819006c8b920f4c4fc887acfdbc6378c54184492cc81"
+    }
+  ]
+}
