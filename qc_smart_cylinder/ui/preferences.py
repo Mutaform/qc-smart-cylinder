@@ -68,7 +68,7 @@ def get_rule(context=None):
     if prefs is None:
         return rule_module.DEFAULT_RULE
     anchors = [(item.diameter_cm, item.segments) for item in prefs.anchors]
-    return rule_module.Rule(anchors, prefs.min_segments, prefs.even_only)
+    return rule_module.Rule(anchors, prefs.min_segments, prefs.even_only, prefs.max_segments)
 
 
 def fill_defaults(prefs):
@@ -153,6 +153,13 @@ class QC_SmartCylinderPreferences(AddonPreferences):
         soft_max=64,
         default=rule_module.MIN_SEGMENTS,
     )
+    max_segments: IntProperty(
+        name="Maximum Segments",
+        description="A cylinder never gets more segments than this; a form that hits it is almost always an object at the wrong scale",
+        min=8,
+        soft_max=1024,
+        default=rule_module.MAX_SEGMENTS,
+    )
     even_only: BoolProperty(
         name="Even Counts Only",
         description="Round the count to an even number so the cylinder stays mirror-symmetric on both axes",
@@ -185,6 +192,7 @@ def draw_preferences(layout, prefs, context):
     split = layout.split(factor=0.5)
     split.prop(prefs, "min_segments")
     split.prop(prefs, "even_only")
+    layout.prop(prefs, "max_segments")
 
     rule = get_rule(context)
     box = layout.box()

@@ -34,8 +34,9 @@ Between anchors the count is interpolated linearly, so every diameter gets its
 own step (15 cm gives 24, 30 cm gives 32, 90 cm gives 58). Outside the table
 the edge length of the nearest anchor is kept: below 10 cm the count shrinks
 in proportion (5 cm gives 10, 3 cm gives 6), above 100 cm it grows in
-proportion (150 cm gives 102, 200 cm gives 136). Counts are always even and
-never below 6.
+proportion (150 cm gives 102, 200 cm gives 136). Counts are always even,
+never below 6 and never above 256; a form that hits the maximum is reported
+as capped, which almost always means the object is at the wrong scale.
 
 Lengths are scene-unit lengths; the scene's unit scale and the object's scale
 are honoured when the rule is evaluated.
@@ -43,7 +44,7 @@ are honoured when the rule is evaluated.
 The table lives in the add-on preferences (`Edit > Preferences > Add-ons >
 QC Smart Cylinder`): every row is an anchor point (diameter in centimetres,
 segments) and can be edited, added or removed; a reset button restores the
-studio table. The minimum count and the even-only rounding are there too, and
+studio table. The minimum and maximum counts and the even-only rounding are there too, and
 a preview row shows what the current rule gives for a few diameters. New
 cylinders and fixes follow the table as soon as it changes.
 

@@ -12,6 +12,8 @@ from _loader import core
 segments = core.segments
 
 seg = segments.segments_for_diameter
+Rule = segments.Rule
+uncapped = segments.Rule(max_segments=10 ** 6)  # the extrapolation itself, without the safety cap
 
 
 def as_float32(value):
@@ -52,7 +54,9 @@ class SegmentsForDiameterTest(unittest.TestCase):
         # 100 cm / 68 segments: the count grows in proportion to the diameter.
         for diameter_cm, expected in ((120, 82), (150, 102), (200, 136), (300, 204), (1000, 680)):
             with self.subTest(diameter_cm=diameter_cm):
-                self.assertEqual(seg(diameter_cm), expected)
+                self.assertEqual(uncapped.segments(diameter_cm), expected)
+        # the default rule stops at the safety cap: a ten-metre "cylinder" is a scale mistake
+        self.assertEqual(seg(1000), segments.MAX_SEGMENTS)
 
     def test_always_even_and_monotonic(self):
         previous = 0
@@ -81,7 +85,7 @@ class SegmentsForDiameterTest(unittest.TestCase):
         self.assertAlmostEqual(segments.edge_length(2.0, 6), 1.0, places=9)
         # Edge length stays flat outside the table.
         below = [segments.edge_length(d, seg(d)) for d in (4, 5, 6, 8, 10)]
-        above = [segments.edge_length(d, seg(d)) for d in (100, 150, 200, 500)]
+        above = [segments.edge_length(d, uncapped.segments(d)) for d in (100, 150, 200, 500)]
         self.assertLess(max(below) - min(below), 0.05)
         self.assertLess(max(above) - min(above), 0.05)
         self.assertAlmostEqual(segments.edge_length(10, 20), 10 * math.sin(math.pi / 20), places=9)
@@ -142,6 +146,23 @@ class RuleTest(unittest.TestCase):
         text = segments.Rule([(12, 16)], min_segments=8).description()
         self.assertIn("16 at 12 cm", text)
         self.assertIn("never below 8", text)
+
+
+class MaximumTest(unittest.TestCase):
+    def test_huge_diameters_are_capped(self):
+        # a centimetre asset read as metres asks for 1284 segments at "18.88 m"
+        rule = Rule()
+        self.assertEqual(rule.segments(1888), 256)
+        self.assertTrue(rule.is_capped(1888))
+        self.assertFalse(rule.is_capped(100))
+        self.assertEqual(Rule(max_segments=1000).segments(1888), 1000)
+
+    def test_odd_maximum_keeps_even_counts(self):
+        self.assertEqual(Rule(max_segments=255).segments(1888), 254)
+        self.assertEqual(Rule(max_segments=255, even=False).segments(1888), 255)
+
+    def test_maximum_never_undercuts_the_minimum(self):
+        self.assertEqual(Rule(min_segments=12, max_segments=4).segments(1.0), 12)
 
 
 if __name__ == "__main__":

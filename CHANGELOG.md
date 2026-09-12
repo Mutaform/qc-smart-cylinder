@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.2 - 2026-09-12
+
+- A maximum segment count (256 by default, editable in the preferences next
+  to the minimum). Unchecking Manual Segments on an asset whose scale is
+  wrong (centimetres read as metres, so a button measures twenty metres)
+  used to flood the mesh with over a thousand segments per ring; such forms
+  now stop at the maximum and the report says "capped: check the object
+  scale". A manual count is never capped.
+
 ## 1.6.1 - 2026-09-12
 
 - Cylinders whose caps are filled with a ladder of quads (no triangle

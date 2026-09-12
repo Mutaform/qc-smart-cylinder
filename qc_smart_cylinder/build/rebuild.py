@@ -247,6 +247,10 @@ def rebuild_object(obj, scene, rule, diameter_source='MAX', manual_segments=0,
         note = _rebuild_component(
             bm, bm_analysis, component, fits, coords, counts, edge_flags, uv_layer,
             source_uvs, caps, analysis_faces, original_quads)
+        if not manual_segments and any(rule.is_capped(d) for d in diameters_cm):
+            # A twenty-metre "cylinder" is nearly always a centimetre asset read as metres.
+            capped = "capped at %d: check the object scale" % rule.max_segments
+            note = (note + ", " + capped) if note else capped
         bmesh.ops.delete(bm, geom=old_vertices[index], context='VERTS')
         results.append(FormResult(obj.name, index, old_counts, counts, diameters_cm, 'FIXED', note))
         changed = True

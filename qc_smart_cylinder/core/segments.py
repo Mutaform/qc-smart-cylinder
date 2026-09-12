@@ -28,10 +28,13 @@ segments. A ``Rule`` turns such a table into a continuous function:
   first anchor the count shrinks in proportion to the diameter, above the
   last it grows in proportion;
 * the result is rounded to an even number (the cylinder stays mirror
-  symmetric on both axes) and never drops below a minimum.
+  symmetric on both axes), never drops below a minimum and never exceeds a
+  maximum -- a form that hits the maximum is almost always an object at the
+  wrong scale (centimetres read as metres), not a twenty-metre cylinder.
 
-The anchors, the minimum and the even rounding are editable in the add-on
-preferences; ``ANCHORS`` and ``MIN_SEGMENTS`` are the studio defaults.
+The anchors, the minimum, the maximum and the even rounding are editable in
+the add-on preferences; ``ANCHORS``, ``MIN_SEGMENTS`` and ``MAX_SEGMENTS``
+are the studio defaults.
 """
 
 import math
@@ -47,14 +50,15 @@ ANCHORS = (
 )
 
 MIN_SEGMENTS = 6
+MAX_SEGMENTS = 256
 
 
 class Rule:
     """The diameter -> segments rule for one set of anchor points."""
 
-    __slots__ = ("anchors", "min_segments", "even")
+    __slots__ = ("anchors", "min_segments", "even", "max_segments")
 
-    def __init__(self, anchors=None, min_segments=MIN_SEGMENTS, even=True):
+    def __init__(self, anchors=None, min_segments=MIN_SEGMENTS, even=True, max_segments=MAX_SEGMENTS):
         cleaned = {}
         for diameter, count in (anchors or ()):
             if diameter > 0 and count > 0:
@@ -64,6 +68,7 @@ class Rule:
         self.anchors = tuple(sorted(cleaned.items()))
         self.min_segments = max(1, int(min_segments))
         self.even = bool(even)
+        self.max_segments = max(self.min_segments, int(max_segments))
 
     def raw(self, diameter_cm):
         """Unrounded segment count: interpolated inside the anchors, proportional outside."""
@@ -78,21 +83,30 @@ class Rule:
                 return n0 + (n1 - n0) * (diameter_cm - d0) / (d1 - d0)
         return float(last_n)
 
-    def segments(self, diameter_cm):
-        """Segment count for a diameter in centimetres."""
+    def _rounded(self, diameter_cm):
         raw = self.raw(max(float(diameter_cm), 0.0))
         if self.even:
-            count = int(math.floor(raw / 2.0 + 0.5)) * 2
-        else:
-            count = int(math.floor(raw + 0.5))
-        return max(self.min_segments, count)
+            return int(math.floor(raw / 2.0 + 0.5)) * 2
+        return int(math.floor(raw + 0.5))
+
+    def segments(self, diameter_cm):
+        """Segment count for a diameter in centimetres."""
+        limit = self.max_segments
+        if self.even and limit % 2 and limit > self.min_segments:
+            limit -= 1
+        return max(self.min_segments, min(limit, self._rounded(diameter_cm)))
+
+    def is_capped(self, diameter_cm):
+        """True when the diameter asks for more than the maximum allows."""
+        return self._rounded(diameter_cm) > self.max_segments
 
     def description(self):
         """One-line, human-readable form of the rule for tooltips."""
         anchors = ", ".join("%d at %g cm" % (n, d) for d, n in self.anchors)
         return (
             "%s; interpolated in between, edge length kept outside that range, "
-            "%s, never below %d" % (anchors, "even counts" if self.even else "any count", self.min_segments)
+            "%s, never below %d, never above %d" % (
+                anchors, "even counts" if self.even else "any count", self.min_segments, self.max_segments)
         )
 
 
