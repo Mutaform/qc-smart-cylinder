@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.1 - 2026-09-12
+
+- Cylinders whose caps are filled with a ladder of quads (no triangle
+  anywhere) are recognised. The loop walk read such a cap as a broken grid,
+  and the second analysis run that dissolves flat caps into n-gons only ran
+  for triangulated meshes; it now also runs whenever the first run leaves
+  faces unexplained. The caps come back as one n-gon each.
+
 ## 1.6.0 - 2026-09-12
 
 Release after a full code review. Fixes:

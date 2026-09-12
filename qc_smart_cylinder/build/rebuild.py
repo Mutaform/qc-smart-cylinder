@@ -363,7 +363,10 @@ def _analyse(mesh):
     analysis.source.extend([0] * len(components))
     analysis.notes = list(notes)
 
-    if any(len(face) == 3 for face in faces):
+    # A second run on a copy with caps dissolved and triangles joined: needed
+    # for triangulated meshes, and for quad meshes whose caps are filled with
+    # a ladder of quads (a planar disc the loop walk reads as a broken grid).
+    if any(len(face) == 3 for face in faces) or not _everything_covered(analysis, faces):
         owned = set()
         for component in components:
             owned.update(component.vertex_indices())
